@@ -13,6 +13,11 @@ const projectsData: Project[] = [
     // imgSrc: '/static/images/google.png',
     href: 'https://github.com/icyveins7/reimage'
   },
+  {
+    title: 'pydsproutines',
+    description: 'Python, Cython, pybinds and custom CUDA kernels for DSP. A collection I have grown over the years.',
+    href: 'https://github.com/icyveins7/pydsproutines'
+  }
   // {
   //   title: 'The Time Machine',
   //   description: `Imagine being able to travel back in time or to the future. Simple turn the knob
