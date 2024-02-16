@@ -21,7 +21,7 @@ const Header = () => {
                 className="h-12 w-12 rounded-full"
                 width={200}
                 height={200}
-                />
+              />
             </div>
             {typeof siteMetadata.headerTitle === 'string' ? (
               <div className="hidden h-6 text-2xl font-semibold sm:block">
