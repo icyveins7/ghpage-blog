@@ -60,8 +60,8 @@ const securityHeaders = [
 module.exports = () => {
   const plugins = [withContentlayer, withBundleAnalyzer]
   return plugins.reduce((acc, next) => next(acc), {
-    // basePath: '/ghpage-blog', // for github pages?
-    // assetPrefix: '/ghpage-blog/', // for github pages?
+    basePath: '/ghpage-blog', // for github pages?
+    assetPrefix: '/ghpage-blog/', // for github pages?
     output: 'export', // for github pages
     reactStrictMode: true,
     pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
