@@ -17,6 +17,11 @@ const projectsData: Project[] = [
     title: 'pydsproutines',
     description: 'Python, Cython, pybinds and custom CUDA kernels for DSP. A collection I have grown over the years.',
     href: 'https://github.com/icyveins7/pydsproutines'
+  },
+  {
+    title: 'ipp_ext',
+    description: 'C++ templates for Intel Performance Primitives (IPP).',
+    href: 'https://github.com/icyveins7/ipp_ext'
   }
   // {
   //   title: 'The Time Machine',
