@@ -111,7 +111,7 @@ Reason 1200 is apparently ['Loop contains loop-carried data dependencies that pr
 
 I posted all these to the godbolt discord to ask the grandmasters of assembly over there if there was any way around MSVC's issues:
 
-![godbolt discord says msvc is bad](godbolt-discord.png)
+![godbolt discord says msvc is bad](/static/images/msvc-bad-autovectoriser/godbolt-discord.png)
 
 If you'd like to play around with the MSVC implementation, [here's the link on godbolt](https://godbolt.org/z/Txf66f9on).
 
@@ -161,7 +161,7 @@ If you look closely, the assembly is not 100% identical, but it __is functionall
 
 Performance-wise, there is also no difference, as confirmed by the man himself:
 
-![matt godbolt showing me llvm-mca](godbolt-discord-llvm-mca.png)
+![matt godbolt showing me llvm-mca](/static/images/msvc-bad-autovectoriser/godbolt-discord-llvm-mca.png)
 
 Links to my godbolt are [here](https://godbolt.org/z/3qcMqvjxT). Note that if you change it back to MSVC, the original ```movups``` instructions will disappear (this seems to be a thing with MSVC assuming/optimizing the arguments away directly into registers).
 
