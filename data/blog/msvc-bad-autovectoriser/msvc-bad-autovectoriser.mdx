@@ -10,7 +10,7 @@ summary: 'MSVC has extremely lackluster auto-vectorisation, so I handrolled intr
 
 I recently decided I wanted to spend some time understanding intrinsics and SIMD at a deeper level.
 
-In developing code for my project [`ffs`](https://github.com/icyveins7/ffs), I wanted to make sure that the code was running with at least AVX instructions.
+In developing code for my project [`ffs`](https://github.com/icyveins7/ffs), I wanted to make sure that the code was running with at least AVX instructions (because that's my target architecture, and honestly very few computers don't have AVX these days..).
 
 This led me down a path of discovery; first I discovered the amazing-ness that is [godbolt.org](https://godbolt.org), then I joined their discord, where I then asked for some help with understanding basic .asm compiler output.
 
@@ -108,3 +108,65 @@ Obviously, not a single YMM register used, and no packed instructions either. Yo
 ```
 
 Reason 1200 is apparently ['Loop contains loop-carried data dependencies that prevent vectorization. Different iterations of the loop interfere with each other such that vectorizing the loop would produce wrong answers, and the auto-vectorizer can't prove to itself that there aren't such data dependencies.'](https://learn.microsoft.com/en-us/cpp/error-messages/tool-errors/vectorizer-and-parallelizer-messages?view=msvc-170), which obviously is complete garbage.
+
+I posted all these to the godbolt discord to ask the grandmasters of assembly over there if there was any way around MSVC's issues:
+
+![godbolt discord says msvc is bad](godbolt-discord.png)
+
+If you'd like to play around with the MSVC implementation, [here's the link on godbolt](https://godbolt.org/z/Txf66f9on).
+
+
+# Since GCC works, just copy them?
+
+I needed the above to work with MSVC and Windows, so the easiest thing I could think of was to just reverse-translate GCC's output into the appropriate intrinsic calls; I just went to Intel's [catalogue](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html) and searched them one by one. The model answers are literally given, so why not right?
+
+Word for word translation of the GCC instructions:
+
+```
+__m256 ymm2 = _mm256_loadu_ps(reinterpret_cast<const float*>(x));
+__m256 ymm0 = _mm256_loadu_ps(reinterpret_cast<const float*>(y));
+
+__m256 ymm1 = _mm256_permute_ps(ymm2, 160);
+ymm2 = _mm256_permute_ps(ymm2, 245);
+
+ymm1 = _mm256_mul_ps(ymm1, ymm0);
+
+ymm0 = _mm256_permute_ps(ymm0, 177);
+
+ymm0 = _mm256_mul_ps(ymm0, ymm2);
+
+ymm1 = _mm256_addsub_ps(ymm1, ymm0);
+
+_mm256_storeu_ps(reinterpret_cast<float*>(z), ymm1);
+```
+
+
+And their assembly output:
+
+```
+vmovups ymm1, YMMWORD PTR [rdi]
+vmovups ymm0, YMMWORD PTR [rsi]
+vpermilps       ymm3, ymm1, 160
+vpermilps       ymm2, ymm0, 177
+vpermilps       ymm1, ymm1, 245
+vmulps  ymm0, ymm0, ymm3
+vmulps  ymm1, ymm1, ymm2
+vaddsubps       ymm0, ymm0, ymm1
+vmovups YMMWORD PTR [rdx], ymm0
+vzeroupper
+ret
+```
+
+If you look closely, the assembly is not 100% identical, but it __is functionally identical__ (just track the registers and you'll see it).
+
+Performance-wise, there is also no difference, as confirmed by the man himself:
+
+![matt godbolt showing me llvm-mca](godbolt-discord-llvm-mca.png)
+
+Links to my godbolt are [here](https://godbolt.org/z/3qcMqvjxT). Note that if you change it back to MSVC, the original ```movups``` instructions will disappear (this seems to be a thing with MSVC assuming/optimizing the arguments away directly into registers).
+
+# Some Concluding Remarks
+
+I didn't go into the workings of how the complex number multiplies work, because that's pretty much inside the stackoverflow link.
+
+Also, some might ask why I didn't use a library like Eigen. Yes, I could have, but that would require including a giant library just for one function which is ```ffs```. Also, it was a pretty good learning opportunity.
