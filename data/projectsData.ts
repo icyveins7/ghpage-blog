@@ -22,6 +22,11 @@ const projectsData: Project[] = [
     title: 'ipp_ext',
     description: 'C++ templates for Intel Performance Primitives (IPP).',
     href: 'https://github.com/icyveins7/ipp_ext'
+  },
+  {
+    title: 'sew',
+    description: 'sew is bunch of SQLite wrappers and extensions for Python. It shortens the code needed for simple CRUD operations; no more writing SQL statements yourself!',
+    href: 'https://github.com/icyveins7/sew'
   }
   // {
   //   title: 'The Time Machine',
