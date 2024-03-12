@@ -140,7 +140,7 @@ cmul4(std::complex<float> const*, std::complex<float> const*, std::complex<float
 
 ```
 
-Aside from the aligned vs non-aligned ```mov``` instructions, the main difference is that Eigen uses ```vmovsldup``` and ```vmovshdup``` instead of ```vpermilps``` for two of the instructions. However, it turns out this choice is insignificant, as the same number of cycles are used:
+Aside from the aligned vs non-aligned ```mov``` instructions, the main difference is that Eigen uses ```vmovsldup``` and ```vmovshdup``` instead of ```vpermilps``` for two of the instructions. However, it turns out this choice is insignificant, as the same number of cycles are used for permute and shuffle:
 
 ```
 Timeline view:
@@ -171,5 +171,5 @@ If you noticed, the GCC code this time is slightly different from the last post.
 
 Honestly, don't know what half of them are right now, but hey, FMA and AVX are both in there and are relevant to what I do.
 
-Surprisingly though, it seems like there's no real difference in terms of number of cycles, so I guess the benefit is only in higher precision using FMA.
+Surprisingly though, it seems like there's very little real difference in terms of number of cycles (only 1 less, since we have to wait for the previous ```mul``` instructions to finish), so I guess the benefit for this case is primarily in higher precision using FMA.
 
