@@ -16,9 +16,13 @@ In kickstart.nvim's template, ```clangd``` is listed as an example LSP, so I dec
 
 # Header Resolution with clangd
 
--- TODO: graphic of clangd errors
+My code was immediately flooded with warnings, to the point that ```clangd``` itself said it would stop reporting errors. A lot of them looked like this:
 
-Solution? Generate a ```compile_commands.json``` [see this](https://clangd.llvm.org/design/compile-commands). In particular, I needed to make sure this was _near the root of the directory_. In my original setup, I had separate ```CMakeLists.txt``` files in my ```examples/``` and ```tests/``` subdirectories, and would manually enter each subdirectory when I needed to do stuff there. However, this meant that when opening my ```include/``` subdirectory's files, I would be greeted with similar ```clangd``` errors.
+![clangd-warnings](/static/images/clangd-warnings.png)
+
+It seemed like most of them were related to header resolution; I had seen a similar type of error/warning in VSCode before, which always seemed to magically disappear after running ```cmake``` the first time.
+
+Solution? Generate a ```compile_commands.json``` [(see this)](https://clangd.llvm.org/design/compile-commands). In particular, I needed to make sure this was _near the root of the directory_. In my original setup, I had separate ```CMakeLists.txt``` files in my ```examples/``` and ```tests/``` subdirectories, and would manually enter each subdirectory when I needed to do stuff there. However, this meant that when opening my ```include/``` subdirectory's files, I would be greeted with similar ```clangd``` errors, as it wouldn't see the ```compile_commands.json``` generated from running ```cmake``` for the prior folders.
 
 So I needed to write an outermost ```CMakeLists.txt```, to ensure that the ```compile_commands.json``` appeared in the ```build/``` subdirectory at the top. Enabling this explicitly is trivial by just placing this line in that top-level ```CMakeLists.txt```:
 
@@ -28,7 +32,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Compile commands don't work with MSVC
 
-As it turns out, [setting the above does absolutely nothing when using MSVC](https://cmake.org/cmake/help/latest/variable/CMAKE_EXPORT_COMPILE_COMMANDS.html), which I was using since I was in Windows. I didn't want to use MinGW-gcc here, so I thought I'd try the other generator in the link: [Ninja](https://github.com/ninja-build/ninja).
+The second problem is related to the first. As it turns out, [setting the above does absolutely nothing when using MSVC](https://cmake.org/cmake/help/latest/variable/CMAKE_EXPORT_COMPILE_COMMANDS.html), which I was using since I was in Windows. I didn't want to use MinGW-gcc here, so I thought I'd try the other generator in the link: [Ninja](https://github.com/ninja-build/ninja).
 
 After installing and calling ```cmake .. -G Ninja```, the ```compile_commands.json``` was generated and everything worked as they should.
 
@@ -36,6 +40,6 @@ After installing and calling ```cmake .. -G Ninja```, the ```compile_commands.js
 
 1. I always didn't like how MSVC _had_ to be different by pushing the build type configuration to after the ```cmake``` call. Using ```ninja``` lets me have a more symmetric experience while retaining the use of MSVC, as now I can always specify ```-DCMAKE_BUILD_TYPE``` at the ```cmake``` step regardless of whether I'm on unix or Windows.
 2. I get to ```make``` things by ```ninja``` and ```make clean``` by ```ninja clean```. This is pretty satisfying.
-3. Having ```compile_commands.json``` means I can see the literal command for every executable, rather than having to dig inside the ```.vcxproj```.
+3. Having ```compile_commands.json``` means I can see the literal command for every executable, rather than having to dig inside the ```.vcxproj``` to double-check every option that was enabled; previously I would just wait til compile time to see the command line arguments the project file would use.
 
 
