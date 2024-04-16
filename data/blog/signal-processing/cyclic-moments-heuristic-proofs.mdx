@@ -22,7 +22,7 @@ To see a proper treatment, refer to [the man himself](https://cyclostationary.bl
 Let's consider a generic QPSK signal given by:
 
 $$
-s(t) = \left[ \sum_k m_k (\delta(t - kT) \star h(t)) \right] e^{i 2 \pi f t}
+s(t) = \left[ \sum_k m_k (\delta(t - kT) \star h(t)) \right] e^{i 2 \pi f_c t}
 $$
 
 where the symbols are given by
@@ -31,7 +31,7 @@ $$
 m_k \in \{1, i, -1, -i\}
 $$
 
-The baud period here is specified by $T$ and the carrier offset to be estimated is given by $f$.
+The baud period here is specified by $T$ and the carrier offset to be estimated is given by $f_c$.
 
 The correct thing to do here is to find some values of exponents where the result contains _additive tones_. These will show up in a specturm of FFT plot as peaks that can be easily measured.
 
@@ -49,16 +49,57 @@ $$
 
 What happens when we square the terms in the square brackets?
 
-$$
-\left[ \sum_k m_k (\delta(t - kT) \star h(t)) \right]^2 = \left[ \sum_k m_k (\delta(t - kT) \star h(t)) \right] \left[ \sum_{k'} m_{k'} (\delta(t - {k'}T) \star h(t)) \right]
-$$
-
 There are 2 terms at play here: intra-term products and inter-term products.
-The intra-term products occur where
 
+Let's first consider the inter-term products:
 
+$$
+m_k m_{k'} (\delta(t - kT) \star h(t)) (\delta(t - k'T) \star h(t))
+$$
 
-# Baud rate estimation
+It shouldn't be too difficult to see that this should tend to 0, since for a random variable $m_k$, the expectation value of $m_k m_{k'}$ should approach 0. Moreover, most reasonable time-limited pulse shapes $h(t)$ only have non-negligible support within 1 symbol. Hence, the contribution of non-zero products is also limited.
+
+Hence we turn our attention to the intra-term products:
+
+$$
+{m_k}^2 (\delta(t-kT) \star h(t))^2
+$$
+
+We square again to get our exponent of 4, obtaining
+
+$$
+{m_k}^4 (\delta(t-kT) \star h(t))^4 = (\delta(t-kT) \star h(t))^4
+$$
+
+where we have substituted ${m_k}^4 = 1$.
+
+What can we say about this final expression? Let's bring the summation back into the picture:
+
+$$
+\sum_k (\delta(t-kT) \star h(t))^4
+$$
+
+We start the analysis by considering what would happen if we used a $\delta$ function as a pulse:
+
+$$
+\sum_k (\delta(t-kT) \star h(t))^4 \rightarrow \sum_k (\delta(t-kT))^4 = \sum_k \delta(t-kT)
+$$
+
+Well the Fourier transform of this Dirac comb is simply another Dirac comb:
+
+$$
+\mathcal{F}\left[\sum_k \delta(t-kT)\right] = \sum_k \delta\left(f - \frac{k}{T}\right)
+$$
+
+Let's put this together with the other parts of $s(t)$ to get
+
+$$
+\begin{align}
+\mathcal{F}\left[s(t)^4\right] &\approx \sum_k \delta\left(f - \frac{k}{T}\right) \star \delta(f - 4f_c)\\
+&= \sum_k \delta(f - 4f_c - \frac{k}{T} )
+\end{align}
+$$
+
 
 
 
