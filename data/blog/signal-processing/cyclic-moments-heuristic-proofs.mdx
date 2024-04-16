@@ -1,0 +1,65 @@
+---
+title: Some heuristic proofs for cyclostationary methods
+date: '2024-04-16'
+tags: ['dsp', 'cyclostationary', 'proof']
+draft: false
+summary: "Carrier offset and baud rate estimation can be done blindly using cyclostationary (cyclic moment) methods, but why?"
+---
+
+# Introduction
+
+In [reimage](https://github.com/icyveins7/reimage), there are options to blindly estimate a signal's baud rate or residual carrier offset. These require some working knowledge, and only work on some types of modulations like PSK. But why do they work, and how do we explain the peaks we see in the resulting spectra?
+
+First, some terminology. Here I'll often mention the exponents in a _CM_ XY form: this refers to applying an exponent onto a signal with a total of $X$, where $Y$ of that is the conjugate. These refer to the cyclic moments.
+
+For example, _CM_ 20 refers to $x^2$ whereas _CM_ 21 refers to $x x^*$.
+
+To see a proper treatment, refer to [the man himself](https://cyclostationary.blog/2019/04/26/simple-synchronization-using-csp/). Otherwise, onwards we go..
+
+
+# Carrier offset estimation
+
+Let's consider a generic QPSK signal given by:
+
+$$
+s(t) = \left[ \sum_k m_k (\delta(t - kT) \star h(t)) \right] e^{i 2 \pi f t}
+$$
+
+where the symbols are given by
+
+$$
+m_k \in \{1, i, -1, -i\}
+$$
+
+The baud period here is specified by $T$ and the carrier offset to be estimated is given by $f$.
+
+The correct thing to do here is to find some values of exponents where the result contains _additive tones_. These will show up in a specturm of FFT plot as peaks that can be easily measured.
+
+We claim now the required operation is _CM_ 40 i.e.
+
+$$
+s(t) \rightarrow s^4 (t)
+$$
+
+Let's see what this does to the signal. First, observe that the exponent applied directly to the message symbols always results in 1:
+
+$$
+{m_k}^4 = 1 \, \text{for all } m_k
+$$
+
+What happens when we square the terms in the square brackets?
+
+$$
+\left[ \sum_k m_k (\delta(t - kT) \star h(t)) \right]^2 = \left[ \sum_k m_k (\delta(t - kT) \star h(t)) \right] \left[ \sum_{k'} m_{k'} (\delta(t - {k'}T) \star h(t)) \right]
+$$
+
+There are 2 terms at play here: intra-term products and inter-term products.
+The intra-term products occur where
+
+
+
+# Baud rate estimation
+
+
+
+
