@@ -8,7 +8,7 @@ summary: "Carrier offset and baud rate estimation can be done blindly using cycl
 
 # Introduction
 
-In [reimage](https://github.com/icyveins7/reimage), there are options to blindly estimate a signal's baud rate or residual carrier offset. These require some working knowledge, and only work on some types of modulations like PSK. But why do they work, and how do we explain the peaks we see in the resulting spectra?
+In [ReImage](https://github.com/icyveins7/reimage), there are options to blindly estimate a signal's baud rate or residual carrier offset. These require some working knowledge, and only work on some types of modulations like PSK. But why do they work, and how do we explain the peaks we see in the resulting spectra?
 
 First, some terminology. Here I'll often mention the exponents in a _CM_ XY form: this refers to applying an exponent onto a signal with a total of $X$, where $Y$ of that is the conjugate. These refer to the cyclic moments.
 
@@ -47,7 +47,7 @@ $$
 {m_k}^4 = 1 \, \text{for all } m_k
 $$
 
-What happens when we square the terms in the square brackets?
+What happens when we first try to square the terms in the square brackets?
 
 There are 2 terms at play here: intra-term products and inter-term products.
 
@@ -57,7 +57,7 @@ $$
 m_k m_{k'} (\delta(t - kT) \star h(t)) (\delta(t - k'T) \star h(t))
 $$
 
-It shouldn't be too difficult to see that this should tend to 0, since for a random variable $m_k$, the expectation value of $m_k m_{k'}$ should approach 0. Moreover, most reasonable time-limited pulse shapes $h(t)$ only have non-negligible support within 1 symbol. Hence, the contribution of non-zero products is also limited.
+It shouldn't be too difficult to see that this should tend to 0, since for a random variable $m_k$, the expectation value of $m_k m_{k'}$ should approach 0. Moreover, most reasonable time-limited pulse shapes $h(t)$ only have non-negligible support within 1 symbol i.e. within $T$ of each other. Hence, the contribution of non-zero products is also limited.
 
 Hence we turn our attention to the intra-term products:
 
@@ -85,7 +85,7 @@ $$
 \sum_k (\delta(t-kT) \star h(t))^4 \rightarrow \sum_k (\delta(t-kT))^4 = \sum_k \delta(t-kT)
 $$
 
-Well the Fourier transform of this Dirac comb is simply another Dirac comb:
+Well the Fourier transform of this Dirac comb is simply another Dirac comb ([see this](https://dspillustrations.com/pages/posts/misc/the-dirac-comb-and-its-fourier-transform.html)):
 
 $$
 \mathcal{F}\left[\sum_k \delta(t-kT)\right] = \sum_k \delta\left(f - \frac{k}{T}\right)
@@ -100,6 +100,29 @@ $$
 \end{align}
 $$
 
+where we have left out any inter-term products and also the Fourier transform of ${m_k}^4$.
+
+What does this suggest to us? The spectrum consists of components centred around $f = 4f_c$, with steps of $\pm1/T$, otherwise known as the baud rate.
+
+But here we assumed the infinitesimal pulse shape $\delta$; what if we revert to a more practical pulse shape like an RRC? Heuristically, we need only consider the properties of Fourier transforms: the more support it has in time, the less support its transform has in frequency. Hence, we expect to have the Dirac comb in frequency space be multiplied (since we convolved with $h(t)$) with a pulse of some _bandwidth_.
+
+$$
+\begin{align}
+\sum_k (\delta(t-kT) \star h(t))^4 &= \sum_k h^4(t-kT) \\
+&= \sum_k \delta(t - kT) \star h^4(t)
+\end{align}
+$$
+
+$$
+\begin{align}
+\mathcal{F}\left[ \sum_k \delta(t-kT) \star h^4(t) \right] &= \sum_k  \delta(f - \frac{k}{T}) \times \mathcal{F} \left[ h^4 (t) \right] \\
+&= \sum_k  \delta(f - \frac{k}{T}) \times H(f)
+\end{align}
+$$
+
+That is, the amplitude of the Dirac comb in frequency space has an _envelope_ defined by the Fourier transform of $h^4 (t) = H(f)$. Together with the other $\delta$-function, this shifts the entire enveloped Dirac comb to centre around $4f_c$.
+
+Hence, we expect to see a large peak in the spectrum at $4f_c$, with smaller peaks uniformly at $1/T$ spacing.
 
 
 
