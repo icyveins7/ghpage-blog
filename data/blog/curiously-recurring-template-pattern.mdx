@@ -1,0 +1,21 @@
+---
+title: CRTP, method chaining, and static polymorphism
+date: '2024-04-30'
+tags: ['c++', 'crtp']
+draft: false
+summary: 'Yes, it's yet another blogpost about CRTP and how it'd be useful..'
+---
+
+# The 1st issue: method chaining
+Have you seen a billion other blogposts about CRTP? Yes, so have I. But maybe there's a reason for all of them; it wasn't really apparent when reading them previously why it would be useful and/or why I would ever need it. 
+
+
+But recently, while writing some simple templated code for [```ufl```](https://github.com/icyveins7/ufl), I had the bright idea of trying to make method chaining possible for the class. That's when my templated class and its derived friend implementation started to fall apart.
+
+I think [this post](https://dariusgrant.github.io/2021/02/11/Method-Chaining-Base-Class-Methods-With-Derived-Classes.html) is probably the best explanation for how CRTP solves this problem, so I'm not going to repeat it here, but rather leave a link (for myself). Bonus points for not having ads all over the place on that page.
+
+# The 2nd issue: static polymorphism
+
+I remember stumbling on a [video](https://www.youtube.com/watch?v=NH1Tta7purM) that removed virtual functions with templates a few years back.
+
+
