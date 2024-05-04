@@ -1,6 +1,6 @@
 ---
 title: CRTP, method chaining, and static polymorphism
-date: '2024-04-30'
+date: '2024-05-04'
 tags: ['c++', 'crtp']
 draft: false
 summary: "Yes, it's yet another blogpost about CRTP and how it'd be useful.."
@@ -23,10 +23,11 @@ While writing some code for [```uhdeb```](https://github.com/icyveins7/uhdeb), I
 My first thought was to define a parent templated class that contained a ```T m_stream```. But now I had 2 choices:
 
 1. I write a custom constructor for each of the derived classes. This would call the appropriate initialization for each type of ```m_stream```. But I wanted the constructor to also do similar things for both derived classes - allocate some memory, start a thread - and so I would have had to copy all those calls, violating DRY.
+2. Do some virtual calls.
 
 The code (roughly speaking) looked like this:
 
-```
+```c++
 template <typename T>
 class Parent
 {
@@ -64,4 +65,62 @@ class DerivedTX : Parent<TXStreamer>
 
 Could I have refactored the code to not have this problem? Probably. But at the time I was adamant on finding a way of getting this to work.
 
+The way I did it was to push all the 'standard' constructor logic to the parent class. The parent class would call the appropriate derived class's ```create_stream``` method through CRTP:
 
+```c++
+template <typename T, typename U>
+class Parent
+{
+    Parent()
+    {
+        static_cast<U*>(this)->create_stream();
+
+        // the rest of the ctor..
+
+    }
+
+
+    T m_stream;
+};
+
+class DerivedRX : Parent<RXStreamer, DerivedRX>
+{
+    DerivedRX(...) : Parent(...)
+    {
+        // nothing else needs to be done..
+    }
+
+    void create_stream()
+    {
+        // custom RX code..
+    }
+};
+
+class DerivedTX : Parent<TXStreamer, DerivedTX>
+{
+    DerivedTX(...) : Parent(...)
+    {
+        // nothing else needs to be done
+    }
+
+    void create_stream()
+    {
+        // custom TX code..
+    }
+};
+```
+
+This avoids any use of ```virtual``` methods - _no vtables here hoho_ - and the correct derived method is called for each derived class!
+
+Oh, I also had to add a ```friend class``` declaration within the derived class definitions in order for it to work.
+
+Now, if you look at this and are thinking: couldn't he have just moved the custom streamer types back into the derived class definitions? Then there would be no need for any of these shenanigans, and there would just be simple parent and derived classes. And you would be right.
+
+But like I said, I was exploring, and it was interesting.
+
+Going to leave some more references here for myself:
+
+1. [https://www.fluentcpp.com/2017/05/16/what-the-crtp-brings-to-code/](https://www.fluentcpp.com/2017/05/16/what-the-crtp-brings-to-code/)
+2. [https://eli.thegreenplace.net/2013/12/05/the-cost-of-dynamic-virtual-calls-vs-static-crtp-dispatch-in-c](https://eli.thegreenplace.net/2013/12/05/the-cost-of-dynamic-virtual-calls-vs-static-crtp-dispatch-in-c)
+
+I'm sure some day soon I'll find a stronger use-case for this. I never really liked doing ```virtual``` methods after all.
