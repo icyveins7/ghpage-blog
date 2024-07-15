@@ -3,7 +3,7 @@ title: Some notes on 2D real-to-complex Fourier transforms
 date: '2024-07-15'
 tags: ['dft', 'c++', 'r2c', 'ipp', 'cufft', 'numpy', 'python']
 draft: false
-summary: 'IPP in particular has some very niche ways of packing R2C DFT output, but otherwise there's a few pointers here to keep in mind for how they are implemented in most libraries.
+summary: "IPP in particular has some very niche ways of packing R2C DFT output, but otherwise there's a few pointers here to keep in mind for how they are implemented in most libraries."
 ---
 
 It's pretty well known that the output of a Fourier transform of real inputs has symmetric properties. This is due to the fact that real waves consist of two conjugate pairs of complex exponentials.
