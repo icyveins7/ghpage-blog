@@ -1,0 +1,95 @@
+---
+title: Some notes on 2D real-to-complex Fourier transforms
+date: '2024-07-15'
+tags: ['dft', 'c++', 'r2c', 'ipp', 'cufft', 'numpy', 'python']
+draft: false
+summary: 'IPP in particular has some very niche ways of packing R2C DFT output, but otherwise there's a few pointers here to keep in mind for how they are implemented in most libraries.
+---
+
+It's pretty well known that the output of a Fourier transform of real inputs has symmetric properties. This is due to the fact that real waves consist of two conjugate pairs of complex exponentials.
+
+What may be a bit less obvious (at least to me, when examining some programming libraries) is exactly how many useful output elements there are, and under which scenarios. In particular, I looked at IPP (which has some special packed structure), and cuFFT/NumPy/SciPy (which follow the FFTW structure I think).
+
+# The 1D Definition
+
+We should start here before going on to 2D things. It's easily wiki-able, but here's our 1D DFT:
+
+$$
+X_k = \sum_n x_n e^{-i 2 \pi \frac{kn}{N}}, \text{for } n \in [0,…,N-1]
+$$
+
+where $x_n$ consists of real elements in a length $N$ array.
+
+# Conjugate pairs
+
+The first obvious redundancy happens when you recognise
+
+$$
+\begin{align}
+X_{N-k} &= \sum_n x_n e^{-i 2 \pi \frac{(N-k)n}{N}} \\
+&= \sum_n x_n e^{-i 2 \pi \frac{Nn}{N}} e^{i 2 \pi \frac{kn}{N}} \\
+&= \sum_n x_n e^{i 2 \pi \frac{kn}{N}} \\
+&= {X_k}^*
+\end{align}
+$$
+So *roughly* half the output is redundant. But for programming purposes, let’s be a bit more specific.
+
+## Odd $N$
+
+The 0-th element is self-conjugate, so it must be completely real. The remaining elements can be paired up, so in general there will be $\frac{N-1}{2}$ conjugate pairs of complex values that are useful.
+
+In total this makes for $2\frac{N-1}{2} + 1 = N$ useful real values.
+## Even $N$
+
+The 0-th element is self-conjugate and is completely real again. However there is another element at $X_{N/2} = {X_{N-N/2}}^*$ that by definition must also be self-conjugate, and hence completely real. The rest of the elements then comprise the $\frac{N-2}{2}$ conjugate pairs of useful complex values.
+
+This again makes for a total of $\frac{N-2}{2} + 2 = N$ useful real values.
+
+> In all cases, the number of useful, real values is equal to $N$. This shouldn’t be too surprising since the dimensionality cannot change!
+
+# Library output formats
+## FFTW-like complex output (NumPy/SciPy/cuFFT/IPP CCS)
+
+Most libraries return a fully complex-valued, truncated output, stopping at index $N/2 +1$. This handles both odd and even valued $N$ correctly, with the last value having a non-zero imaginary component only for odd $N$.
+
+This is equivalent to converting the input to complex first - NumPy/SciPy will do this for you - running a standard FFT, then dropping the second half(ish).
+
+Show example
+
+## Packed output (IPP R2CPacked)
+
+Show example
+
+Since there are always $N$ real values in the output, we can drop the 0-valued imaginary components (the 0-index, and the N/2-index for the even $N$ case) and simply squeeze everything together. This would make the output a bit shorter.
+
+Notably, I haven’t seen any other library opt to this, since it would require operating on the output in a non-uniform way; you would have to remember that the first (and possibly the last) output has 1 real element, while everything in between has 2 real elements (1 complex element). That means you can’t traverse it with the same pointer.
+
+Understandably, this is probably why it isn’t seen elsewhere. IPP has a variation of choices in what output formats you can select - but not always, since in its image processing section you are *forced* to use this output format, and then convert it to another format if you wish after.
+
+# 2D transforms and their R2C output dimensions
+
+At first glance, you might have thought that since 1D transforms can be defined by half the output, 2D transforms could be defined by $1/4$ of them right?
+
+Okay if not, then you’re smarter than I was. After I had realised the dimensionality argument for the 1D case, the 2D case became equally clear.
+
+> In an $M \times N$ real matrix, the output of the transform must contain $MN$ real, useful values.
+
+It shouldn’t be hard to see that this means that you can still only drop about half of the full complex 2D DFT output.
+
+But how do libraries choose what to keep? It turns out everyone seems to have *chosen to agree* on this part.
+
+## Slice the fastest changing dimension
+
+The title says it all. In a typical array defined by, for example
+
+```
+std::complex<float> out[a][b];
+```
+
+the `b` index is the one that gets truncated. This also follows for 3D transforms, though I’m not going to bother with that here.
+
+Again, there’s no mathematical reason behind this; it’s merely a convention. 
+
+To see why you could slice it the other way, let’s consider an example.
+
+Show example.
