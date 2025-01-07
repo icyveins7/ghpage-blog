@@ -208,7 +208,25 @@ In the above example, we did need `addstatic()` inside `shared.cpp`. But `addsta
 
 [This](https://stackoverflow.com/questions/54126641/symbols-in-static-library-sometimes-got-linked-into-executable-sometimes-not) is a pretty good post about the above linkage behaviour.
 
-# Back to the *real* topic of hidden references
+## Fine, isn't the solution easy? Just link the static library?
+
+Yes, that is indeed the solution here. This way the linker sees the necessary symbol, which is present in `libstatic.a`. But technically, that's not the only way to fix the problem..
+
+## Including everything from the archive
+
+We've already seen that the linker has the freedom to pick and choose the objects it wants to include. But if you're building a shared library, you probably just want to dump everything in; that way, the end-user can just use *your* library, instead of having to link in the original static library as well.
+
+Well, we can do that too, with `-Wl,--whole-archive`:
+
+```make
+# Link shared.o and static library to create the shared object (.so)
+$(SHARED_LIB): $(SHARED_OBJ) $(STATIC_LIB)
+	$(CXX) -shared -o $@ $(SHARED_OBJ) -L. -Wl,--whole-archive -lstatic
+```
+
+This inserts all object file components from the static library directly into the new shared library, so we can find the symbols again!
+
+# Finally we get to the title question..
 
 
 
