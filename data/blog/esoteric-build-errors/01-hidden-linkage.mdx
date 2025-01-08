@@ -32,7 +32,6 @@ This was a different kind of error, and one that I think resulted from the choic
 
 If you want to go ahead and read the stackoverflow links that helped me, go ahead and click [here](https://stackoverflow.com/questions/23696585/what-does-exactly-the-warning-mean-about-hidden-symbol-being-referenced-by-dso).
 
-TODO: one more link?
 
 # It's also not a link order issue
 
@@ -46,7 +45,7 @@ For those who don't know, `ld` resolves symbol references in a very specific ord
 
 This is why specifying libraries in the right order matters, because if you provide the library '*before*' you make the 'request', the `ld` will not go back and get it for you (but I think MSVC will, so 1 point to Microsoft I guess?).
 
-I'll leave this excellent writeup on the topic [here](https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking), as I think it explains the topic far better than I ever could (he even talks about the circular dependencies! I had to do relist libraries during my build process fixes too!)
+I'll leave this excellent writeup on the topic [here](https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking), as I think it explains the topic far better than I ever could (he even talks about the circular dependencies!)
 
 ## A little more in-depth: what does the linker actually pull in?
 
@@ -226,7 +225,45 @@ $(SHARED_LIB): $(SHARED_OBJ) $(STATIC_LIB)
 
 This inserts all object file components from the static library directly into the new shared library, so we can find the symbols again!
 
-# Finally we get to the title question..
+# Finally we get back to the title question..
 
+Of course, the above isn't the full story. Most libraries nowadays limit the _visibility_ of their functions. For those that want the full story, just read [this](https://gcc.gnu.org/wiki/Visibility).
 
+You might be thinking: okay, I don't really care about 'protecting' any part of my code, so should I ever use this if I'm writing a `.so`? The answer is still yes, because it is likely to generate more optimal and smaller code.
 
+Let's take a look at how this would affect the above example. Here I'm specifically going to use the 1st method of linking the static library to resolve the undefined reference, and then I'm going to turn on `-fvisibility=hidden` for both `static.cpp` and `static_exclude.cpp`:
+
+```make
+# Compile static.cpp to a static library (.a)
+$(STATIC_LIB): $(STATIC_SRC)  
+	$(CXX) $(CXXFLAGS) -fvisibility=hidden -c static.cpp -o static.o
+	$(CXX) $(CXXFLAGS) -fvisibility=hidden -c static_exclude.cpp -o static_exclude.o
+	ar rcs $@ static.o static_exclude.o
+
+# Link shared.o and static library to create the shared object (.so)
+$(SHARED_LIB): $(SHARED_OBJ) $(STATIC_LIB)
+	$(CXX) -shared -o $@ $(SHARED_OBJ) -L. -lstatic
+
+# Link e.o with the shared library to create the final executable
+# Also link static library to solve undefined reference
+$(EXEC): $(E_OBJ) $(SHARED_LIB)
+	$(CXX) -o $@ $(E_OBJ) -L. -lshared -lstatic
+```
+
+I did not change the internal code whatsoever, just this Makefile. Building again now results in the following error (yes, this is a screenshot from an iPhone, shoutout to the makers of [iSH](https://github.com/ish-app/ish)):
+
+![ish screenshot of hidden symbol error](/static/images/hiddensymbolerror.jpg)
+
+## Recap of what we did here
+
+The order of problems and solutions we just presented to reach this step is as follows:
+
+1. First build the static library as per normal, then create the shared library using it with a simple `-lstatic`, and finally create the executable linking only the shared library. _This causes an undefined reference, since our executable uses a function in an object that was dropped by the linker when creating the shared library._
+2. We fixed this by linking our static library in the final executable as well. _This fixes the undefined reference as we provide the object file containing the function we used._
+3. We then turned on `-fvisibility=hidden` for all our initial static library source files. _This causes the `hidden symbol in DSO` error, since __ALL__ the functions we are using are now hidden by default, and hence cannot be used by our executable._
+
+# Some concluding remarks
+
+These recent discoveries have made me think about the importance of understanding not just the shiny _algorithms_ (read: leet code) and computer science things, but also learning about the tools available to us as developers.
+
+It's like a carpenter learning about the optimal angle to hammer a nail but not knowing how to use an electric drill (I'm not a carpenter but I build IKEA things so hopefully that was reasonable).
