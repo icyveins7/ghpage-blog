@@ -289,9 +289,15 @@ The order of problems and solutions we just presented to reach this step is as f
 
 Now the fix for this is actually quite simple; we simply need to link the static library during the shared library creation again!
 
-Why this fixes the problem is fairly interesting.
+Doing this places our hidden static library symbols into the DSO, which can then be used by the shared library's exported symbol. Dumping the symbols using `nm libshared.so` I see:
 
-TODO: complete
+```
+T _Z14sharedaddscaleiii
+t _Z15notusedbysharedii
+t _Z9addstaticii
+```
+
+where the `T` means that it is included and `t` means it is hidden (if it's your first time, just look up `nm` or `objdump` output). Hence, the shared library now clearly contains the necessary hidden symbol for `addstatic`, and this is referenced by `sharedaddscale` in the final executable without having to look _outside_ the current DSO; this is exactly what _hidden_ visibility is meant to do.
 
 # Some concluding remarks
 
