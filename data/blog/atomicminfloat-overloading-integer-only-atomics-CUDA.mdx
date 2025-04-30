@@ -110,7 +110,7 @@ Let's just look at a bunch of examples of floating point values after they are r
 
 In the first 2 cases - where `val` is positive - we see that reinterpreting as a signed integer and then taking the _minimum_ matches our floating point minimum i.e. here we take the `atomicMin`.
 
-In the next 2 cases - where `val` is positive - the above is inconsistent, and we should instead reinterpret as unsigned integers, where the floating point minimum now corresponds to the unsigned _maximum_ i.e. here we take the `atomicMax` of the integers, even though we were looking for the `atomicMin` of the floats!
+In the next 2 cases - where `val` is negative - the above is inconsistent, and we should instead reinterpret as unsigned integers, where the floating point minimum now corresponds to the unsigned _maximum_ i.e. here we take the `atomicMax` of the integers, even though we were looking for the `atomicMin` of the floats!
 
 Remember, in all our cases above, we are making the decision for the reinterpreted type _based solely on the sign of `val`_.
 
