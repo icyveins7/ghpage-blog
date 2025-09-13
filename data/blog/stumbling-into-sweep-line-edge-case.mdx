@@ -77,7 +77,7 @@ Ideally, after sorting, due to the counter mechanism outlined above, we would ne
 
 However, since we did not check for this, the above order may remain unchanged, causing the counter to do $1 \rightarrow 0$ twice, leaving the two intervals separated, with an illogical start/stop on the same index.
 
-In fact, this may result in very odd size-less intervals when there more overlaps occur. Consider the following 4 intervals:
+~~In fact, this may result in very odd size-less intervals when there more overlaps occur. Consider the following 4 intervals:~~
 
 ```
 X-----X
@@ -86,7 +86,9 @@ X-----X
       X----X
 ```
 
-If we just focus on the 4-way overlap in the centre, we have two 1s and two 0s as possible event flags. In the worst case, this may be ordered as $0,1,0,1$, which would result in an interval that starts and stops on the same index (from the centre 1 and 0).
+~~If we just focus on the 4-way overlap in the centre, we have two 1s and two 0s as possible event flags. In the worst case, this may be ordered as $0,1,0,1$, which would result in an interval that starts and stops on the same index (from the centre 1 and 0).~~
+
+> Edit: I previously thought the above would result in a 0 size interval, but on second thought I was wrong.
 
 The fix is then, of course, to use flags to sort when indices match:
 
