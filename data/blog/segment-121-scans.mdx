@@ -13,7 +13,7 @@ Many segments can be boiled down to what I call a 1-2-1 pattern. For an array of
 ---------> activated
 ```
 
-The activation pixel is what define us to be within a segment. This can happen several times within a segment, but it doesn't matter (activating an already active segment does nothing):
+The activation pixel is what defines us to be within a segment. This can happen several times within a segment, but it doesn't matter (activating an already active segment does nothing):
 
 ```
 . . . . . 2 2
@@ -38,9 +38,9 @@ This is not a segment
 
 # Scan when there are many
 
-Now the astute leetcoder will probably realise that this is terribly inefficient. If you have multiple segments, you will end up doing a lot of backtracking. The fundamental idea of using a scan here is to *remember the last boundary*. In this case, we also need to remember if we in an *active* segment.
+Now the astute leetcoder will probably realise that this is terribly inefficient. If you have multiple segments, you will end up doing a lot of backtracking. The fundamental idea of using a scan here is to *remember the last boundary*. In this case, we also need to remember if we are in an *active* segment.
 
-> For the uninformed, a *prefix scan*, is essentially a rolling operation with a binary functor. That is, you define an operation taking in two values - before, after - and return a new value. This new value is used in the next operation (instead of the original input). The most common variant is arguably a prefix sum, otherwise known as a cumulative sum or `cumsum` in many languages.
+> For the uninformed, a *prefix scan* is essentially a rolling operation with a binary functor. That is, you define an operation taking in two values - before, after - and return a new value. This new value is used in the next operation (instead of the original input). The most common variant is arguably a prefix sum, otherwise known as a cumulative sum or `cumsum` in many languages.
 
 This easily boils down to a few simple operations:
 
@@ -56,7 +56,7 @@ Idx 0 1 2 3 4 5 6 7
 Sdx - 1 - 3 - - 6 -
 ```
 
-Here, `Sdx` is simply a transform of the original incrementing index: set to -1 if its not a boundary `1`,  otherwise keep the original index. Then, our scan operation looks something like this:
+Here, `Sdx` is simply a transform of the original incrementing index: set to -1 if it's not a boundary `1`,  otherwise keep the original index. Then, our scan operation looks something like this:
 
 ```cpp
 FlagAndIndex operator()(
@@ -85,7 +85,7 @@ Odx - 1 1 3 3 3 6 6
 We can walk through this simple example:
 
 1. Index 0. We are performing an *inclusive* scan so the first input is just copied. No-op.
-2. We hit the first `1` at index 1. This hits our **Reset** condition so output becomes the current index i.e. 1, and we use the input flag `1`.
+2. We hit the first `1` at index 1. This hits our **Reset** condition so output becomes the current index i.e., 1, and we use the input flag `1`.
 3. Index 2: **Extend**. Simply copy the same value from before; `max(flagA, flagB)` is still just `1`.
 4. Index 3 has hit our **Reset** again. We hence update to the current index, 3, and flag, `1`.
 5. Index 4: **Extend**. This hits the first activation. The index is dragged up (still 3) but now the flag after the `max()` operation is `2`.
