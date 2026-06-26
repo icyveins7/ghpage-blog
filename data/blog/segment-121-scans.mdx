@@ -1,3 +1,11 @@
+---
+title: Your left-right boundary search is actually a CUDA-friendly single scan
+date: '2026-06-26'
+tags: ['cuda', 'cub', 'scans']
+draft: false
+summary: "At least, most of the time it is. As long as it fits the 1-2-1 pattern.."
+---
+
 Many segments can be boiled down to what I call a 1-2-1 pattern. For an array of input elements (I'll just call them pixels, it's shorter for me to type), a naive segment detection is to loop forwards until you hit an *activation* pixel. This can internally be any condition you'd like; that is, any `if (...)` is possible here as long as you operate only on the pixel you're currently at. For simplicity, I'll assume this is the `2` pixel:
 
 ```
@@ -74,7 +82,6 @@ Out 0 1 1 1 2 2 1 1
 Odx - 1 1 3 3 3 6 6
 ```
 
-
 We can walk through this simple example:
 
 1. Index 0. We are performing an *inclusive* scan so the first input is just copied. No-op.
@@ -143,26 +150,35 @@ We can define these 3 scan-pairs - (flag, index) - mathematically as
 $$
 a = (0, -1)
 $$
+
 $$
 b = (1, 1)
 $$
+
 $$
 c = (2, -1)
 $$
+
 We can test exactly what the previous functor did on these 3 points pair-wise
+
 $$
 f(a, b) = (1, 1)
 $$
+
 $$
 f(b,c) = (2,1)
 $$
+
 and then test the associativity
+
 $$
 f(f(a,b), c) = f((1,1), (2,-1)) = (2,1)
 $$
+
 $$
 f(a,f(b,c)) = f((0,-1),(2,1)) = (2,-1)
 $$
+
 Thus, in this case, the two are not equal, proving that the binary functor as defined above is actually *not associative*. This means that it is not guaranteed to produce the correct (intended) results when using `cub::DeviceScan`.
 
 But what actually happened here? The fact is that using the flag to *decide* between the `if/else` paths for the functor in this case breaks associativity, because it gets mutated in one of the paths.
