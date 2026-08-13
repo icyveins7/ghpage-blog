@@ -74,7 +74,7 @@ You have probably heard of kernel fusion. The primary reason for this is to redu
 
 Now, I would go so far as to claim that this is essentially true all of the time. You should default to this mindset when looking for optimization avenues; however, we should always remain cognizant of what we give up by doing this. This is why I tend to write small kernels and then merge them, rather than write long ones and split them later. It's always far more maddening to try to disentangle a fat kernel.
 
-So why fatshame kernels? Well, in general, the longer your kernel is, the more registers per thread it will use. The compiler does an excellent job of reducing and reusing registers, but it isn't perfect. it is unlikely that any non-trivial kernel will stay below 20 registers per thread.
+So why fatshame kernels? Well, in general, the longer your kernel is, the more registers per thread it will use. The compiler does an excellent job of reducing and reusing registers, but it isn't perfect. It is unlikely that any non-trivial kernel will stay below 20 registers per thread.
 
 The story here is the same as that of the thread count. If we exceed the total number of registers per SM, the SM will cut blocks until it fits. Consider the following configuration:
 
@@ -89,7 +89,7 @@ As we saw earlier, under normal circumstances, you would easily fit 12 blocks ($
 > In fact, the problem is actually worse than this. CUDA actually allocates registers at a warp granularity. In most cases, this is 256 registers per warp (or 8 registers per thread). What this means is you get *breakpoints*; 40 registers per thread and 41 registers per thread is a gigantic jump, since 41 registers per thread is effectively 'the same as 48 registers per thread'.
 
 The same goes for shared memory - static and dynamic alike. You may have heard that the maximum shared memory per thread block is 64KB (at least by default, yes I know you can increase it nowadays, but the point still stands).
-You might then think it's ok to use as much of it as possible for each thread block; after all, then we exploit the fast cache-like memory bandwidth right? Not quite. You have essentially the same maximum shared memory per block as maximum shared memory per SM. So if you use all 64KB of shared memory for 1 block, then the SM will have capacity to hold *only that one block*. If your block size is 128 threads, then your theoretical occupancy is tanking all the way down to $\frac{128}{1536}$ (or a similar calculation for your compute capability). That is an 8% to be ashamed of.
+You might then think it's ok to use as much of it as possible for each thread block; after all, we get to exploit the fast cache-like memory bandwidth right? Not quite. You have essentially the same maximum shared memory per block as maximum shared memory per SM. So if you use all 64KB of shared memory for 1 block, then the SM will have capacity to hold *only that one block*. If your block size is 128 threads, then your theoretical occupancy is tanking all the way down to $\frac{128}{1536}$ (or a similar calculation for your compute capability). That is an 8% to be ashamed of.
 
 # Occupancy isn't everything
 
