@@ -1,3 +1,11 @@
+---
+title: 'Occupancy-maxxing is just Starcraft'
+date: '2026-08-12'
+tags: ['occupancy', 'starcraft', 'cuda']
+draft: false
+summary: 'If you can manage minerals and gas, you can manage CUDA threads and registers.'
+---
+
 > CUDA is just resource management.
 
 Okay, of course there's a lot more to squeezing CUDA kernel performance than *just resource management*, but occupancy is very often the simplest thing to strive for, once you know how. And usually, if you've hit 100% occupancy, then unless you've done something heinous in your code, further optimizations are unlikely to budge your performance by large factors (aside from an entire algorithmic shift, but we won't discuss that here).
