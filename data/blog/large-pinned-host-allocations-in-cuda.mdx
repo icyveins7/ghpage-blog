@@ -21,8 +21,20 @@ Let's start with what is *not* a good reason to leave everything in pinned memor
 
 If your processing is element-wise, then you can effectively cut the data using any method and then treat each sub-unit as its own problem. Invoke the kernel(s) per sub-unit, and hide the latency of the H2D/D2H transfers by having a separate stream(s). This is all standard CUDA at this point.
 
-```
-TODO: insert mermaid diagram for overlap kernels with memcpy
+```mermaid
+gantt
+    title Tilewise CUDA Processing
+    dateFormat x
+    tickInterval 1millisecond
+    axisFormat %L
+    section Tile 1
+        H2D                :active, h2d_1, 0, 5
+        Processing kernel  :crit, k_1, 5, 15
+        D2H                :active, d2h_1, 15, 20
+    section Tile 2
+        H2D                :active, h2d_2, 10, 15
+        Processing kernel  :crit, k_2, 15, 25
+        D2H                :active, d2h_2, 25, 30
 ```
 
 ## Until the smallest unit is simply too big
