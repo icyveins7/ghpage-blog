@@ -3,7 +3,7 @@ title: Large pinned host allocations in CUDA
 date: '2026-09-02'
 tags: ['pinned', 'cuda', 'cache']
 draft: false
-summary: 'Sometimes, you just can't fit everything in VRAM.'
+summary: "Sometimes, you just can't fit everything in VRAM."
 ---
 
 In most CUDA projects, the advice is usually to transfer all inputs, outputs, and temporary scratch space to the device. Working completely inside VRAM is *fast*, and avoids both the complexity and the throughput hit that comes with over-PCIe transfers being scattered throughout your hot path.
